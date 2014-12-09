@@ -5,6 +5,10 @@ output:
     keep_md: true
 ---
 
+```{r}
+options(scipen=100000, digits=2)
+```
+
 
 ## Loading and preprocessing the data
 ```{r loaddata}
@@ -14,13 +18,16 @@ activity$date <- as.Date(activity$date)
 
 
 ## What is mean total number of steps taken per day?
-First, we sum by day.  
-Then we take a mean of those daily values.  
+First, we sum by day.
+Then we take mean and meadian of those daily values.  
 ```{r meantotalsteps}
 ag <- aggregate(steps ~ date, data=activity, FUN=sum)
 ms <- mean(ag$steps)
+mds <- median(ag$steps)
+hist(ag$steps)
 ```
-**The mean total number of steps taken per day is `r ms`**
+
+**The mean total number of steps taken per day is `r ms`; the median is `r mds`**
 
 
 ## What is the average daily activity pattern?
@@ -29,17 +36,33 @@ For the sake of simplicity, we have kept the time interval in its original scale
 ag_5min <- aggregate(steps ~ interval, FUN=mean, data=activity)
 library(ggplot2)
 qplot(interval, steps, data=ag_5min, geom="line")
+mx <- which.max(as.numeric(ag_5min$steps, names=ag_5min$interval))
 ```
+
+**On average, the most active 5 minute interval is interval number `r mx`**
 
 
 
 ## Imputing missing values
-We use the mean steps across all days for the missing interval in question
 ```{r impute}
 act_imp <- activity
 nas <- is.na(act_imp$steps)
+n_nas <- sum(nas)
 act_imp$steps[nas] <- ag_5min[match(act_imp$interval[nas], ag_5min$interval),"steps"]
 ```
+
+**There are `r n_nas` NA values in the dataset**  
+We use the mean steps across all days for the missing interval in question
+
+```{r impute2}
+ag_imp <- aggregate(steps ~ date, data=act_imp, FUN=sum)
+ms_imp <- mean(ag_imp$steps)
+mds_imp <- median(ag_imp$steps)
+hist(ag_imp$steps)
+```
+
+**After imputation, The mean total number of steps taken per day is `r ms_imp` (originally `r ms`); the median is `r mds_imp` (originally `r mds`)**  
+We note that the mean remains the same as the original data, but the median drops slightly.
 
 
 ## Are there differences in activity patterns between weekdays and weekends?

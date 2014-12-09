@@ -1,6 +1,11 @@
 # Reproducible Research: Peer Assessment 1
 
 
+```r
+options(scipen=100000, digits=2)
+```
+
+
 ## Loading and preprocessing the data
 
 ```r
@@ -10,14 +15,19 @@ activity$date <- as.Date(activity$date)
 
 
 ## What is mean total number of steps taken per day?
-First, we sum by day.  
-Then we take a mean of those daily values.  
+First, we sum by day.
+Then we take mean and meadian of those daily values.  
 
 ```r
 ag <- aggregate(steps ~ date, data=activity, FUN=sum)
 ms <- mean(ag$steps)
+mds <- median(ag$steps)
+hist(ag$steps)
 ```
-**The mean total number of steps taken per day is 1.0766 &times; 10<sup>4</sup>**
+
+![plot of chunk meantotalsteps](./PA1_template_files/figure-html/meantotalsteps.png) 
+
+**The mean total number of steps taken per day is 10766.19; the median is 10765**
 
 
 ## What is the average daily activity pattern?
@@ -31,16 +41,38 @@ qplot(interval, steps, data=ag_5min, geom="line")
 
 ![plot of chunk avgdaily](./PA1_template_files/figure-html/avgdaily.png) 
 
+```r
+mx <- which.max(as.numeric(ag_5min$steps, names=ag_5min$interval))
+```
+
+**On average, the most active 5 minute interval is interval number 104**
+
 
 
 ## Imputing missing values
-We use the mean steps across all days for the missing interval in question
 
 ```r
 act_imp <- activity
 nas <- is.na(act_imp$steps)
+n_nas <- sum(nas)
 act_imp$steps[nas] <- ag_5min[match(act_imp$interval[nas], ag_5min$interval),"steps"]
 ```
+
+**There are 2304 NA values in the dataset**  
+We use the mean steps across all days for the missing interval in question
+
+
+```r
+ag_imp <- aggregate(steps ~ date, data=act_imp, FUN=sum)
+ms_imp <- mean(ag_imp$steps)
+mds_imp <- median(ag_imp$steps)
+hist(ag_imp$steps)
+```
+
+![plot of chunk impute2](./PA1_template_files/figure-html/impute2.png) 
+
+**After imputation, The mean total number of steps taken per day is 10766.19 (originally 10766.19); the median is 10766.19 (originally 10765)**  
+We note that the mean remains the same as the original data, but the median drops slightly.
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
